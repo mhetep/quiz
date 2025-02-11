@@ -1,10 +1,37 @@
-<!DOCTYPE html> 
+<!DOCTYPE html> ==$0
 
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Quiz<title>
+    <style>
+        body {
+            font-family:sans-serif;
+            color: indigo;
+        }
+        button {
+        background: ghostwhite;
+        border: none;
+        color:inherit;
+        padding: 8px 16px;
+        transition: 0.5s;
+        }
+        button:hover {
+            background: lavender;
+            cursor: pointer;
+            padding: 8px 24x;  
+        }
+        button.clicked.correct {
+            background: turquoise; 
+        }
+        button.clicked {
+            background:deeppink; 
+            color:white;
+
+        }
+
+    </style>
 </head>
 <body>
     <h1> Web Quiz</h1>
@@ -22,12 +49,15 @@
 
         <script>
             function check(button){
+                button.classList.add("clicked");
                 if (button.classList.contains("correct")){
-                    button.style.background = "green";
+                   // button.style.background = "turqoise";
                 } else{
-                    button.style.background = "red";
-                }
+                   // button.style.background = "deeppink";
+                   // button.style.color = "white";       
+             }
             }
+        
 
         </script>
 </body>
