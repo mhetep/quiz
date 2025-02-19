@@ -2,81 +2,153 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Quiz<title>
-    <style>
-        body {
-            font-family:sans-serif;
-            color: indigo;
-        }
-        button {
-        background: ghostwhite;
-        border: none;
-        color:inherit;
-        padding: 8px 16px;
-        transition: 0.5s;
-        }
-        button:hover {
-            background: lavender;
-            cursor: pointer;
-            padding: 8px 24px;  
-        }
-        button.clicked.correct {
-            background: turquoise; 
-        }
-        button.clicked {
-            background:deeppink; 
-            color:white;
-
-        }
-
-    </style>
+<meta name="viewport" content="width=device-width, initial-scale: 1.0"/>
+<title>Memory Mania</title>
+<style>
+    body {
+        font-family: sans-serif;
+        text-align: center;
+        background-color: #f2e5cc;
+    }
+    .game-container {
+        display: grid;
+        grid-template-columns: repeat(4, 100px);
+        grid-gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .card {
+        width: 100px;
+        height: 150px;
+        background: url('MemoryManiaFront.png') center/cover;
+        border: 2px solid #333;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .flipped {
+        background: none;
+    }
+    .reset-button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
 </head>
 <body>
-    <h1> Web Quiz</h1>
+<h1>Memory Card Game</h1>
+<div class="game-container" id="gameBoard"></div>
+<button class="reset-button" onclick="resetGame()">Reset Game</button>
 
-<div class="question">
-    <h2>How should you NOT refer to JavaScript?</h2>
-        <button onclick="check(this)">JS</button>
-        <button onclick="check(this)">VanillaJS</button>
-        <button onclick="check(this)" class="correct">Java</button>
-    </div>
+<!-- Add audio elements -->
+<audio id="flipSound" src="FlipSound.wav" preload="auto"></audio>
+<audio id="backgroundMusic" src="MemoryBckMusic.wav" preload="auto" loop></audio>
 
-    <div class="question">
-<h2>What does this C in CSS stand for?</h2>
+<script>
+    const cardsArray = [
+        { name: "Apple", img: "AppleCard.png" },
+        { name: "Apple", img: "AppleCard.png" },
+        { name: "Cat", img: "CatCard.png" },
+        { name: "Cat", img: "CatCard.png" },
+        { name: "Dog", img: "DogCard.png" },
+        { name: "Dog", img: "DogCard.png" },
+        { name: "Grape", img: "GrapeCard.png" },
+        { name: "Grape", img: "GrapeCard.png" },
+        { name: "Hammer", img: "HammerCard.png" },
+        { name: "Hammer", img: "HammerCard.png" },
+        { name: "Fish", img: "FishCard.png" },
+        { name: "Fish", img: "FishCard.png" },
+    ];
+    let flippedCards = [];
+    let matchedCards = [];
+    let musicStarted = false; // To track if the music has started
 
-<button onclick="check(this)" class="correct">Cascading</button>
-<button onclick="check(this)" >Cat</button>
-<button onclick="check(this)" >Compounding</button>
-</div>
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
 
-        <script>
-            function check(button){
-                button.classList.add("clicked");
-                if (button.classList.contains("correct")){
-                   // button.style.background = "turqoise";
-                } else{
-                   // button.style.background = "deeppink";
-                   // button.style.color = "white";       
-             }
-
-             //Find current questin
-            let question = button.closest('.question')
-
-            //Find all button elements within question
-            let buttons = question.querySelectorAll('button)');
-
-        console.log(buttons);
-
-        //For each button on my list
-        for (let button of buttons) {
-
-            //Disable them
-        button.disabled = true;
-        }
-            }
+    function createBoard() {
+        const gameBoard = document.getElementById("gameBoard");
+        shuffle(cardsArray);
+        gameBoard.innerHTML = "";
         
+        cardsArray.forEach((cardData, index) => {
+            let card = document.createElement("div");
+            card.classList.add("card");
+            card.dataset.name = cardData.name;
+            card.style.backgroundImage = "url('MemoryManiaFront.png')";
+            card.onclick = () => flipCard(card, cardData.img);
+            gameBoard.appendChild(card);
+        });
+    }
 
-        </script>
+    function flipCard(card, imgSrc) {
+        if (!musicStarted) {
+            // Start background music when the first card is clicked
+            let backgroundMusic = document.getElementById("backgroundMusic");
+            backgroundMusic.volume = 0; // Start volume at 0
+            backgroundMusic.play();
+            fadeInMusic(backgroundMusic);
+            musicStarted = true;
+        }
+
+        if (flippedCards.length < 2 && !flippedCards.includes(card) && !matchedCards.includes(card)) {
+            // Play the flip sound
+            let flipSound = document.getElementById("flipSound");
+            flipSound.play();
+
+            card.style.backgroundImage = `url('${imgSrc}')`;
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                setTimeout(checkMatch, 800);
+            }
+        }
+    }
+
+    function checkMatch() {
+        if (flippedCards[0].dataset.name === flippedCards[1].dataset.name) {
+            matchedCards.push(...flippedCards);
+        } else {
+            flippedCards.forEach(card => {
+                card.style.backgroundImage = "url('MemoryManiaFront.png')";
+            });
+        }
+        flippedCards = [];
+
+        if (matchedCards.length === cardsArray.length) {
+            setTimeout(() => alert("You win!"), 500);
+        }
+    }
+
+    function resetGame() {
+        flippedCards = [];
+        matchedCards = [];
+        createBoard();
+    }
+
+    function fadeInMusic(audioElement) {
+        let fadeDuration = 3; // Fade in duration in seconds
+        let fadeInterval = 50; // Interval for fading in (in ms)
+        let targetVolume = 0.5; // Target volume level (adjust as needed)
+
+        let currentVolume = 0;
+        audioElement.volume = currentVolume;
+
+        let fadeIntervalId = setInterval(() => {
+            if (currentVolume < targetVolume) {
+                currentVolume += 0.01;
+                audioElement.volume = currentVolume;
+            } else {
+                clearInterval(fadeIntervalId);
+            }
+        }, fadeInterval);
+    }
+
+    createBoard();
+</script>
 </body>
-</html> 
+</html>
