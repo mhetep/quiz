@@ -28,7 +28,7 @@
         justify-content: center;
     }
     .reset-button, .music-toggle, .timer, .top-score {
-        background: purple;
+        background: #440EA1; /* Updated purple */
         color: white;
         padding: 10px;
         border-radius: 10px;
@@ -53,14 +53,14 @@
     }
     .timer {
         position: absolute;
-        top: 50px;
+        top: 10px; /* Aligned to the same height as music toggle */
         right: 10px;
         font-size: 30px;
         font-weight: bold;
     }
     .top-score {
         position: absolute;
-        top: 90px; /* Adjusted to provide space between timer and score */
+        top: 50px; /* Adjusted to provide space between timer and score */
         right: 10px;
         font-size: 24px;
         font-weight: bold;
@@ -109,7 +109,7 @@
     let timer = 0;
     let timerInterval;
     let musicPlaying = true;
-    let topScore = localStorage.getItem("topScore") || Infinity;
+    let topScore = localStorage.getItem("topScore") ? parseInt(localStorage.getItem("topScore")) : Infinity;
 
     function startTimer() {
         timer = 0;
