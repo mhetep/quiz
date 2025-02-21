@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale: 1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Memory Mania</title>
 <style>
     body {
@@ -12,14 +12,14 @@
     }
     .game-container {
         display: grid;
-        grid-template-columns: repeat(4, 100px);
-        grid-gap: 10px;
+        grid-template-columns: repeat(4, 120px);
+        grid-gap: 15px;
         justify-content: center;
         margin-top: 20px;
     }
     .card {
-        width: 100px;
-        height: 150px;
+        width: 120px;
+        height: 180px;
         background: url('MemoryManiaFront.png') center/cover;
         border: 2px solid #333;
         cursor: pointer;
@@ -30,52 +30,89 @@
     .flipped {
         background: none;
     }
-    .reset-button {
+    .reset-button, .music-toggle {
         margin-top: 20px;
         padding: 10px 20px;
         font-size: 16px;
         cursor: pointer;
     }
+    .timer {
+        font-size: 20px;
+        margin-top: 10px;
+    }
+    .win-message {
+        display: none;
+        font-size: 40px;
+        color: green;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+    .balloons {
+        position: fixed;
+        bottom: -100px;
+        width: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .balloon {
+        position: absolute;
+        bottom: 0;
+        width: 30px;
+        height: 50px;
+        background-color: red;
+        border-radius: 50%;
+        animation: floatUp 5s linear infinite;
+    }
+    @keyframes floatUp {
+        0% { transform: translateY(0); opacity: 1; }
+        100% { transform: translateY(-800px); opacity: 0; }
+    }
 </style>
 </head>
 <body>
 <h1>Memory Card Game</h1>
+<div class="timer" id="timer">Time: 0s</div>
 <div class="game-container" id="gameBoard"></div>
 <button class="reset-button" onclick="resetGame()">Reset Game</button>
+<button class="music-toggle" onclick="toggleMusic()">Toggle Music</button>
+<div class="win-message" id="winMessage">YOU WIN!</div>
+<div class="balloons" id="balloons"></div>
 
-<!-- Add audio elements -->
 <audio id="flipSound" src="FlipSound.wav" preload="auto"></audio>
-<audio id="backgroundMusic" src="MemoryBckMusic.wav" preload="auto" loop></audio>
+<audio id="backgroundMusic" src="Nemui.wav" preload="auto" loop></audio>
 
 <script>
-    const cardsArray = [
-        { name: "Apple", img: "AppleCard.png" },
-        { name: "Apple", img: "AppleCard.png" },
-        { name: "Cat", img: "CatCard.png" },
-        { name: "Cat", img: "CatCard.png" },
-        { name: "Dog", img: "DogCard.png" },
-        { name: "Dog", img: "DogCard.png" },
-        { name: "Grape", img: "GrapeCard.png" },
-        { name: "Grape", img: "GrapeCard.png" },
-        { name: "Hammer", img: "HammerCard.png" },
-        { name: "Hammer", img: "HammerCard.png" },
-        { name: "Fish", img: "FishCard.png" },
-        { name: "Fish", img: "FishCard.png" },
-    ];
     let flippedCards = [];
     let matchedCards = [];
-    let musicStarted = false; // To track if the music has started
+    let timer = 0;
+    let timerInterval;
+    let musicStarted = false;
+    let musicPlaying = true;
 
-    function shuffle(array) {
-        return array.sort(() => Math.random() - 0.5);
+    function startTimer() {
+        timer = 0;
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timer++;
+            document.getElementById("timer").innerText = `Time: ${timer}s`;
+        }, 1000);
+    }
+
+    function toggleMusic() {
+        let music = document.getElementById("backgroundMusic");
+        if (musicPlaying) {
+            music.pause();
+        } else {
+            music.play();
+        }
+        musicPlaying = !musicPlaying;
     }
 
     function createBoard() {
         const gameBoard = document.getElementById("gameBoard");
-        shuffle(cardsArray);
         gameBoard.innerHTML = "";
-        
-        cardsArray.forEach((cardData, index) => {
+        shuffledCards = shuffle([...cardsArray]);
+        shuffledCards.forEach((cardData) => {
             let card = document.createElement("div");
             card.classList.add("card");
             card.dataset.name = cardData.name;
@@ -83,23 +120,19 @@
             card.onclick = () => flipCard(card, cardData.img);
             gameBoard.appendChild(card);
         });
+        startTimer();
     }
 
     function flipCard(card, imgSrc) {
         if (!musicStarted) {
-            // Start background music when the first card is clicked
-            let backgroundMusic = document.getElementById("backgroundMusic");
-            backgroundMusic.volume = 0; // Start volume at 0
-            backgroundMusic.play();
-            fadeInMusic(backgroundMusic);
+            let music = document.getElementById("backgroundMusic");
+            music.volume = 0.3;
+            music.play();
             musicStarted = true;
         }
 
         if (flippedCards.length < 2 && !flippedCards.includes(card) && !matchedCards.includes(card)) {
-            // Play the flip sound
-            let flipSound = document.getElementById("flipSound");
-            flipSound.play();
-
+            document.getElementById("flipSound").play();
             card.style.backgroundImage = `url('${imgSrc}')`;
             flippedCards.push(card);
 
@@ -118,36 +151,53 @@
             });
         }
         flippedCards = [];
-
         if (matchedCards.length === cardsArray.length) {
-            setTimeout(() => alert("You win!"), 500);
+            clearInterval(timerInterval);
+            celebrateWin();
+        }
+    }
+
+    function celebrateWin() {
+        document.getElementById("winMessage").style.display = "block";
+        launchBalloons();
+    }
+
+    function launchBalloons() {
+        const balloonContainer = document.getElementById("balloons");
+        balloonContainer.innerHTML = "";
+        for (let i = 0; i < 10; i++) {
+            let balloon = document.createElement("div");
+            balloon.classList.add("balloon");
+            balloon.style.left = `${Math.random() * 100}%`;
+            balloonContainer.appendChild(balloon);
         }
     }
 
     function resetGame() {
         flippedCards = [];
         matchedCards = [];
+        document.getElementById("winMessage").style.display = "none";
         createBoard();
     }
 
-    function fadeInMusic(audioElement) {
-        let fadeDuration = 3; // Fade in duration in seconds
-        let fadeInterval = 50; // Interval for fading in (in ms)
-        let targetVolume = 0.5; // Target volume level (adjust as needed)
-
-        let currentVolume = 0;
-        audioElement.volume = currentVolume;
-
-        let fadeIntervalId = setInterval(() => {
-            if (currentVolume < targetVolume) {
-                currentVolume += 0.01;
-                audioElement.volume = currentVolume;
-            } else {
-                clearInterval(fadeIntervalId);
-            }
-        }, fadeInterval);
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
     }
 
+    const cardsArray = [
+        { name: "Apple", img: "AppleCard.png" },
+        { name: "Apple", img: "AppleCard.png" },
+        { name: "Cat", img: "CatCard.png" },
+        { name: "Cat", img: "CatCard.png" },
+        { name: "Dog", img: "DogCard.png" },
+        { name: "Dog", img: "DogCard.png" },
+        { name: "Grape", img: "GrapeCard.png" },
+        { name: "Grape", img: "GrapeCard.png" },
+        { name: "Hammer", img: "HammerCard.png" },
+        { name: "Hammer", img: "HammerCard.png" },
+        { name: "Fish", img: "FishCard.png" },
+        { name: "Fish", img: "FishCard.png" }
+    ];
     createBoard();
 </script>
 </body>
